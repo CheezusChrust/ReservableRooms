@@ -295,74 +295,80 @@ local function unlockRRoomDoor(ply)
 end
 
 local function reserveReservableRoom(ply, id)
-    if isnumber(id) and id then
-        local roomIsValid = false
+    if not id or not isnumber(id) then
+        net.Start("reservableRoomUserFeedBack")
+        net.WriteString("Please enter a correct ID.")
+        net.Send(ply)
+
+        return
+    end
+
+    local roomIsValid = false
+
+    for k, v in pairs(ents.FindByClass("reservableroom")) do
+        if tonumber(id) == v:GetRID() then
+            roomIsValid = true
+        end
+    end
+
+    if not roomIsValid then
+        net.Start("reservableRoomUserFeedBack")
+        net.WriteString("Please enter a correct ID.")
+        net.Send(ply)
+
+        return
+    end
+
+    local alreadyOwnsRoom = false
+
+    for k, v in pairs(ents.FindByClass("reservableroom")) do
+        if v:GetOwner() == ply then
+            alreadyOwnsRoom = true
+        end
+    end
+
+    if alreadyOwnsRoom then
+        net.Start("reservableRoomUserFeedBack")
+        net.WriteString("You already own a room.")
+        net.Send(ply)
+
+        return
+    end
+
+    checkIfRoomIsClear(ply, id)
+
+    if entsInRoom == 0 then
+        local roomAlreadyOwned = false
 
         for k, v in pairs(ents.FindByClass("reservableroom")) do
-            if tonumber(id) == v:GetRID() then
-                roomIsValid = true
+            if v:GetRID() == tonumber(id) and IsValid(v:GetOwner()) then
+                roomAlreadyOwned = true
             end
         end
 
-        if roomIsValid then
-            local alreadyOwnsRoom = false
-
+        if roomAlreadyOwned == false then
             for k, v in pairs(ents.FindByClass("reservableroom")) do
-                if v:GetOwner() == ply then
-                    alreadyOwnsRoom = true
+                if v:GetRID() == tonumber(id) then
+                    v:SetOwner(ply)
+
+                    if IsValid(v:GetDoorEnt()) then
+                        v:GetDoorEnt():Fire("close")
+                    end
                 end
             end
 
-            if alreadyOwnsRoom == false then
-                checkIfRoomIsClear(ply, id)
-
-                if entsInRoom == 0 then
-                    local roomAlreadyOwned = false
-
-                    for k, v in pairs(ents.FindByClass("reservableroom")) do
-                        if v:GetRID() == tonumber(id) and IsValid(v:GetOwner()) then
-                            roomAlreadyOwned = true
-                        end
-                    end
-
-                    if roomAlreadyOwned == false then
-                        for k, v in pairs(ents.FindByClass("reservableroom")) do
-                            if v:GetRID() == tonumber(id) then
-                                v:SetOwner(ply)
-
-                                if IsValid(v:GetDoorEnt()) then
-                                    v:GetDoorEnt():Fire("close")
-                                end
-                            end
-                        end
-
-                        lockRRoomDoor(ply)
-                        net.Start("reservableRoomUserFeedBack")
-                        net.WriteString("You have claimed room " .. id .. ".")
-                        net.Send(ply)
-                    else
-                        net.Start("reservableRoomUserFeedBack")
-                        net.WriteString("Someone already owns this room.")
-                        net.Send(ply)
-                    end
-                else
-                    net.Start("reservableRoomUserFeedBack")
-                    net.WriteString("There is something or someone in this room.")
-                    net.Send(ply)
-                end
-            else
-                net.Start("reservableRoomUserFeedBack")
-                net.WriteString("You already own a room.")
-                net.Send(ply)
-            end
+            lockRRoomDoor(ply)
+            net.Start("reservableRoomUserFeedBack")
+            net.WriteString("You have claimed room " .. id .. ".")
+            net.Send(ply)
         else
             net.Start("reservableRoomUserFeedBack")
-            net.WriteString("Please enter a correct ID.")
+            net.WriteString("Someone already owns this room.")
             net.Send(ply)
         end
     else
         net.Start("reservableRoomUserFeedBack")
-        net.WriteString("Please enter a correct ID.")
+        net.WriteString("There is something or someone in this room.")
         net.Send(ply)
     end
 end
