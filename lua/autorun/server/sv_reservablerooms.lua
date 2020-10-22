@@ -1,6 +1,11 @@
-local ReservableRoomsVersion = 24
 local entsInRoom = 0
 util.AddNetworkString("reservableRoomUserFeedBack")
+
+local function sendMsg(ply, msg)
+    net.Start("reservableRoomUserFeedBack")
+    net.WriteString(msg)
+    net.Send(ply)
+end
 
 local function checkRoomDoors()
     local rooms = util.JSONToTable(file.Read("reservablerooms/" .. game.GetMap() .. ".txt", "DATA"))
@@ -82,91 +87,87 @@ concommand.Add("addreservableroom", function(ply, cmd, args)
                 reservableRoom:SetRID(room[1])
                 reservableRoom:SetCollisionBounds(Vector(room[2], room[3], room[4]), Vector(room[5], room[6], room[7]))
                 checkRoomDoors()
-                net.Start("reservableRoomUserFeedBack")
-                net.WriteString("You have created a room.")
-                net.Send(ply)
+                sendMsg(ply, "You have created a room.")
             else
-                net.Start("reservableRoomUserFeedBack")
-                net.WriteString("Please enter the command correctly.")
-                net.Send(ply)
+                sendMsg(ply, "Please enter the command correctly.")
             end
         else
-            net.Start("reservableRoomUserFeedBack")
-            net.WriteString("You are not admin.")
-            net.Send(ply)
+            sendMsg(ply, "You are not admin.")
         end
     end
 end)
 
 concommand.Add("removereservableroom", function(ply, cmd, args)
     if not IsValid(ply) then
-        if args[1] and tonumber(args[1]) then
-            local roomExists = false
-
-            for k, v in pairs(ents.FindByClass("reservableroom")) do
-                if v:GetRID() == tonumber(args[1]) then
-                    roomExists = true
-                    v:Remove()
-                end
-            end
-
-            if roomExists then
-                print("You have removed the specified room.")
-                local rooms = util.JSONToTable(file.Read("reservablerooms/" .. game.GetMap() .. ".txt", "DATA"))
-
-                for k, v in pairs(rooms) do
-                    if v[1] == args[1] then
-                        rooms[k] = nil
-                    end
-                end
-
-                file.Write("reservablerooms/" .. game.GetMap() .. ".txt", util.TableToJSON(rooms, false))
-            else
-                print("The specified room does not exist.")
-            end
-        else
+        if not args[1] or not tonumber(args[1]) then
             print("Please enter the command correctly.")
+
+            return
         end
-    else
-        if ply:IsAdmin() or ply:IsSuperAdmin() then
-            if args[1] and tonumber(args[1]) then
-                local roomExists = false
 
-                for k, v in pairs(ents.FindByClass("reservableroom")) do
-                    if v:GetRID() == tonumber(args[1]) then
-                        roomExists = true
-                        v:Remove()
-                    end
-                end
+        local roomExists = false
 
-                if roomExists then
-                    net.Start("reservableRoomUserFeedBack")
-                    net.WriteString("You have removed the specified room.")
-                    net.Send(ply)
-                    local rooms = util.JSONToTable(file.Read("reservablerooms/" .. game.GetMap() .. ".txt", "DATA"))
-
-                    for k, v in pairs(rooms) do
-                        if v[1] == args[1] then
-                            rooms[k] = nil
-                        end
-                    end
-
-                    file.Write("reservablerooms/" .. game.GetMap() .. ".txt", util.TableToJSON(rooms, false))
-                else
-                    net.Start("reservableRoomUserFeedBack")
-                    net.WriteString("The specified room does not exist.")
-                    net.Send(ply)
-                end
-            else
-                net.Start("reservableRoomUserFeedBack")
-                net.WriteString("Please enter the command correctly.")
-                net.Send(ply)
+        for k, v in pairs(ents.FindByClass("reservableroom")) do
+            if v:GetRID() == tonumber(args[1]) then
+                roomExists = true
+                v:Remove()
             end
-        else
-            net.Start("reservableRoomUserFeedBack")
-            net.WriteString("You are not admin.")
-            net.Send(ply)
         end
+
+        if not roomExists then
+            print("The specified room does not exist.")
+
+            return
+        end
+
+        print("You have removed the specified room.")
+        local rooms = util.JSONToTable(file.Read("reservablerooms/" .. game.GetMap() .. ".txt", "DATA"))
+
+        for k, v in pairs(rooms) do
+            if v[1] == args[1] then
+                rooms[k] = nil
+            end
+        end
+
+        file.Write("reservablerooms/" .. game.GetMap() .. ".txt", util.TableToJSON(rooms, false))
+    else
+        if not ply:IsAdmin() and not ply:IsSuperAdmin() then
+            sendMsg(ply, "You are not admin.")
+
+            return
+        end
+
+        if not args[1] or not tonumbers(args[1]) then
+            sendMsg(ply, "Please enter the command correctly.")
+
+            return
+        end
+
+        local roomExists = false
+
+        for k, v in pairs(ents.FindByClass("reservableroom")) do
+            if v:GetRID() == tonumber(args[1]) then
+                roomExists = true
+                v:Remove()
+            end
+        end
+
+        if not roomExists then
+            sendMsg(ply, "The specified room does not exist.")
+
+            return
+        end
+
+        sendMsg(ply, "You have removed the specified room.")
+        local rooms = util.JSONToTable(file.Read("reservablerooms/" .. game.GetMap() .. ".txt", "DATA"))
+
+        for k, v in pairs(rooms) do
+            if v[1] == args[1] then
+                rooms[k] = nil
+            end
+        end
+
+        file.Write("reservablerooms/" .. game.GetMap() .. ".txt", util.TableToJSON(rooms, false))
     end
 end)
 
@@ -223,35 +224,33 @@ local function lockRRoomDoor(ply)
         end
     end
 
-    if ownsRoom then
-        local doorExists = false
+    if not ownsRoom then
+        sendMsg(ply, "You do not own a door.")
 
-        for k, v in pairs(ents.FindByClass("reservableroom")) do
-            if v:GetOwner() == ply and IsValid(v:GetDoorEnt()) then
-                doorExists = true
-            end
-        end
-
-        if doorExists then
-            for k, v in pairs(ents.FindByClass("reservableroom")) do
-                if v:GetOwner() == ply then
-                    v:GetDoorEnt():Fire("lock")
-                end
-            end
-
-            net.Start("reservableRoomUserFeedBack")
-            net.WriteString("You have locked your door.")
-            net.Send(ply)
-        else
-            net.Start("reservableRoomUserFeedBack")
-            net.WriteString("There is no door for this room.")
-            net.Send(ply)
-        end
-    else
-        net.Start("reservableRoomUserFeedBack")
-        net.WriteString("You do not own a door.")
-        net.Send(ply)
+        return
     end
+
+    local doorExists = false
+
+    for k, v in pairs(ents.FindByClass("reservableroom")) do
+        if v:GetOwner() == ply and IsValid(v:GetDoorEnt()) then
+            doorExists = true
+        end
+    end
+
+    if not doorExists then
+        sendMsg(ply, "There is no door for this room.")
+
+        return
+    end
+
+    for k, v in pairs(ents.FindByClass("reservableroom")) do
+        if v:GetOwner() == ply then
+            v:GetDoorEnt():Fire("lock")
+        end
+    end
+
+    sendMsg(ply, "You have locked your door.")
 end
 
 local function unlockRRoomDoor(ply)
@@ -263,42 +262,38 @@ local function unlockRRoomDoor(ply)
         end
     end
 
-    if ownsRoom then
-        local doorExists = false
+    if not ownsRoom then
+        sendMsg(ply, "You do not own a door.")
 
-        for k, v in pairs(ents.FindByClass("reservableroom")) do
-            if v:GetOwner() == ply and IsValid(v:GetDoorEnt()) then
-                doorExists = true
-            end
-        end
-
-        if doorExists then
-            for k, v in pairs(ents.FindByClass("reservableroom")) do
-                if v:GetOwner() == ply then
-                    v:GetDoorEnt():Fire("unlock")
-                end
-            end
-
-            net.Start("reservableRoomUserFeedBack")
-            net.WriteString("You have unlocked your door.")
-            net.Send(ply)
-        else
-            net.Start("reservableRoomUserFeedBack")
-            net.WriteString("There is no door for this room.")
-            net.Send(ply)
-        end
-    else
-        net.Start("reservableRoomUserFeedBack")
-        net.WriteString("You do not own a door.")
-        net.Send(ply)
+        return
     end
+
+    local doorExists = false
+
+    for k, v in pairs(ents.FindByClass("reservableroom")) do
+        if v:GetOwner() == ply and IsValid(v:GetDoorEnt()) then
+            doorExists = true
+        end
+    end
+
+    if not doorExists then
+        sendMsg(ply, "There is no door for this room.")
+
+        return
+    end
+
+    for k, v in pairs(ents.FindByClass("reservableroom")) do
+        if v:GetOwner() == ply then
+            v:GetDoorEnt():Fire("unlock")
+        end
+    end
+
+    sendMsg(ply, "You have unlocked your door.")
 end
 
 local function reserveReservableRoom(ply, id)
     if not id or not isnumber(id) then
-        net.Start("reservableRoomUserFeedBack")
-        net.WriteString("Please enter a correct ID.")
-        net.Send(ply)
+        sendMsg(ply, "Please enter a correct ID.")
 
         return
     end
@@ -312,9 +307,7 @@ local function reserveReservableRoom(ply, id)
     end
 
     if not roomIsValid then
-        net.Start("reservableRoomUserFeedBack")
-        net.WriteString("Please enter a correct ID.")
-        net.Send(ply)
+        sendMsg(ply, "Please enter a correct ID.")
 
         return
     end
@@ -328,87 +321,81 @@ local function reserveReservableRoom(ply, id)
     end
 
     if alreadyOwnsRoom then
-        net.Start("reservableRoomUserFeedBack")
-        net.WriteString("You already own a room.")
-        net.Send(ply)
+        sendMsg(ply, "You already own a room.")
 
         return
     end
 
     checkIfRoomIsClear(ply, id)
 
-    if entsInRoom == 0 then
-        local roomAlreadyOwned = false
+    if entsInRoom ~= 0 then
+        sendMsg(ply, "There is something or someone in this room.")
 
-        for k, v in pairs(ents.FindByClass("reservableroom")) do
-            if v:GetRID() == tonumber(id) and IsValid(v:GetOwner()) then
-                roomAlreadyOwned = true
-            end
-        end
-
-        if roomAlreadyOwned == false then
-            for k, v in pairs(ents.FindByClass("reservableroom")) do
-                if v:GetRID() == tonumber(id) then
-                    v:SetOwner(ply)
-
-                    if IsValid(v:GetDoorEnt()) then
-                        v:GetDoorEnt():Fire("close")
-                    end
-                end
-            end
-
-            lockRRoomDoor(ply)
-            net.Start("reservableRoomUserFeedBack")
-            net.WriteString("You have claimed room " .. id .. ".")
-            net.Send(ply)
-        else
-            net.Start("reservableRoomUserFeedBack")
-            net.WriteString("Someone already owns this room.")
-            net.Send(ply)
-        end
-    else
-        net.Start("reservableRoomUserFeedBack")
-        net.WriteString("There is something or someone in this room.")
-        net.Send(ply)
+        return
     end
+
+    local roomAlreadyOwned = false
+
+    for k, v in pairs(ents.FindByClass("reservableroom")) do
+        if v:GetRID() == tonumber(id) and IsValid(v:GetOwner()) then
+            roomAlreadyOwned = true
+        end
+    end
+
+    if roomAlreadyOwned then
+        sendMsg(ply, "Someone already owns this room.")
+
+        return
+    end
+
+    for k, v in pairs(ents.FindByClass("reservableroom")) do
+        if v:GetRID() == tonumber(id) then
+            v:SetOwner(ply)
+
+            if IsValid(v:GetDoorEnt()) then
+                v:GetDoorEnt():Fire("close")
+            end
+        end
+    end
+
+    lockRRoomDoor(ply)
+    sendMsg(ply, "You have claimed room " .. id .. ".")
 end
 
 local function clearReservableRoom(ply, id)
-    if ply:IsAdmin() or ply:IsSuperAdmin() then
-        if isnumber(id) and id then
-            local roomIsValid = false
+    if not ply:IsAdmin() and not ply:IsSuperAdmin() then
+        sendMsg(ply, "You are not >= admin.")
 
-            for k, v in pairs(ents.FindByClass("reservableroom")) do
-                if tonumber(id) == v:GetRID() then
-                    roomIsValid = true
-                end
-            end
-
-            if roomIsValid then
-                for k, v in pairs(ents.FindByClass("reservableroom")) do
-                    if v:GetRID() == tonumber(id) then
-                        v:SetOwner(nil)
-                    end
-                end
-
-                net.Start("reservableRoomUserFeedBack")
-                net.WriteString("You have cleared room " .. id .. ".")
-                net.Send(ply)
-            else
-                net.Start("reservableRoomUserFeedBack")
-                net.WriteString("Please enter a correct ID.")
-                net.Send(ply)
-            end
-        else
-            net.Start("reservableRoomUserFeedBack")
-            net.WriteString("Please enter a correct ID.")
-            net.Send(ply)
-        end
-    else
-        net.Start("reservableRoomUserFeedBack")
-        net.WriteString("You are not >= admin.")
-        net.Send(ply)
+        return
     end
+
+    if not isnumber(id) or not id then
+        sendMsg(ply, "Please enter a correct ID.")
+
+        return
+    end
+
+    local roomIsValid = false
+
+    for k, v in pairs(ents.FindByClass("reservableroom")) do
+        if tonumber(id) == v:GetRID() then
+            roomIsValid = true
+        end
+    end
+
+    if not roomIsValid then
+        sendMsg(ply, "Please enter a correct ID.")
+
+        return
+    end
+
+    for k, v in pairs(ents.FindByClass("reservableroom")) do
+        if v:GetRID() == tonumber(id) then
+            v:SetOwner(nil)
+        end
+    end
+
+    sendMsg(ply, "You have cleared room " .. id .. ".")
 end
 
 local function unclaimReservableRoom(ply)
@@ -420,23 +407,21 @@ local function unclaimReservableRoom(ply)
         end
     end
 
-    if ownsRoom then
-        unlockRRoomDoor(ply)
+    if not ownsRoom then
+        sendMsg(ply, "You do not own a room.")
 
-        for k, v in pairs(ents.FindByClass("reservableroom")) do
-            if v:GetOwner() == ply then
-                v:SetOwner(nil)
-            end
-        end
-
-        net.Start("reservableRoomUserFeedBack")
-        net.WriteString("You have unclaimed your room.")
-        net.Send(ply)
-    else
-        net.Start("reservableRoomUserFeedBack")
-        net.WriteString("You do not own a room.")
-        net.Send(ply)
+        return
     end
+
+    unlockRRoomDoor(ply)
+
+    for k, v in pairs(ents.FindByClass("reservableroom")) do
+        if v:GetOwner() == ply then
+            v:SetOwner(nil)
+        end
+    end
+
+    sendMsg(ply, "You have unclaimed your room.")
 end
 
 hook.Add("PlayerSay", "playerSayReservableRoomCommand", function(ply, text)
@@ -456,14 +441,6 @@ hook.Add("PlayerSay", "playerSayReservableRoomCommand", function(ply, text)
 
     if plySaySplit[1] == "!lockdoor" then
         lockRRoomDoor(ply)
-
-        return ""
-    end
-
-    if plySaySplit[1] == "!rrv" then
-        net.Start("reservableRoomUserFeedBack")
-        net.WriteString("This server is running ReservableRooms version " .. ReservableRoomsVersion .. ".")
-        net.Send(ply)
 
         return ""
     end
