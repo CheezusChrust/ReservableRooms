@@ -57,9 +57,11 @@ Either make an issue on GitHub or contact me on Steam(id/Bkamahl).
 ## Instructions:
 
 In game, as an admin or super admin use the command "addreservableroom" to add a reservable room.
-The command arguements are addreservableroom ROOMNUMBER Vec1Pos1 Vec1Pos2 Vec1Pos3 Vec2Pos1 Vec2Pos2 Vec2Pos3 garagedoorname(optional)
-( garagedoorname is optional ( used for door system ) )
-And to remove a room the command is removereservableroom ROOMNUMBER
+
+Usage: `addreservableroom roomnumber v1x v1y v1z v2x v2y v2z doorname`
+`doorname` is optional - used for map doors
+
+To remove a room: `removereservableroom roomnumber`
 
 ## Changelog
 
