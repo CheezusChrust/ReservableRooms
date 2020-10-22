@@ -24,8 +24,6 @@ Door locking: Doors automatically close and lock upon claiming the room with the
 
 !lockdoor ( Locks your door if you have a reserved room )
 
-!rrv ( Returns server version of ReservableRooms )
-
 !unclaim ( Unclaims a spot if you own it ( Does not require ID ))
 
 !unlockdoor ( Unlocks your door if you have a reserved room )
