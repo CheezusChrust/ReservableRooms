@@ -59,7 +59,8 @@ Either make an issue on GitHub or contact me on Steam(id/Bkamahl).
 In game, as an admin or super admin use the command "addreservableroom" to add a reservable room.
 
 Usage: `addreservableroom roomnumber v1x v1y v1z v2x v2y v2z doorname`
-`doorname` is optional - used for map doors
+
+(`doorname` is optional - used for map doors)
 
 To remove a room: `removereservableroom roomnumber`
 
