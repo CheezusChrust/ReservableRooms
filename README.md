@@ -28,6 +28,12 @@ Door locking: Doors automatically close and lock upon claiming the room with the
 
 `!unlockdoor` - Unlocks your door if you have a reserved room
 
+## Admin commands:
+
+`addreservableroom ROOMNUMBER v1x v1y v1z v2x v2y v2z DOORNAME` - Adds a room (`DOORNAME` optional - used for map doors)
+
+`removereservableroom ROOMNUMBER` - Removes a room
+
 ## F.A.Q.
 
 > Does this support buddy lists?
@@ -53,16 +59,6 @@ So people on advanced building servers can't be annoyed while building, if they 
 > Where do I report bugs?
 
 Either make an issue on GitHub or contact me on Steam(id/Bkamahl).
-
-## Instructions:
-
-In game, as an admin or super admin use the command "addreservableroom" to add a reservable room.
-
-Usage: `addreservableroom roomnumber v1x v1y v1z v2x v2y v2z doorname`
-
-(`doorname` is optional - used for map doors)
-
-To remove a room: `removereservableroom roomnumber`
 
 ## Changelog
 
