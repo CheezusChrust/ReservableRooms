@@ -24,9 +24,9 @@ Door locking: Doors automatically close and lock upon claiming the room with the
 
 `!lockdoor` - Locks your door if you have a reserved room
 
-`!unclaim` Unclaims a reserved room
+`!unclaim` - Unclaims a reserved room
 
-`!unlockdoor` Unlocks your door if you have a reserved room
+`!unlockdoor` - Unlocks your door if you have a reserved room
 
 ## F.A.Q.
 
