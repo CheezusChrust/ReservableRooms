@@ -48,13 +48,39 @@ concommand.Add("addreservableroom", function(ply, cmd, args)
                 room = {args[1], args[2], args[3], args[4], args[5], args[6], args[7]}
             end
 
+            --Ensure args conform to AABB mins/maxs
+            local x1, y1, z1, x2, y2, z2 = args[2], args[3], args[4], args[5], args[6], args[7]
+
+            local tmp
+            if x1 > x2 then
+                tmp = x2
+                x2 = x1
+                x1 = tmp
+                room[2] = x1
+                room[5] = x2
+            end
+            if y1 > y2 then
+                tmp = y2
+                y2 = y1
+                y1 = tmp
+                room[3] = y1
+                room[6] = y2
+            end
+            if z1 > z2 then
+                tmp = z2
+                z2 = z1
+                z1 = tmp
+                room[4] = z1
+                room[7] = z2
+            end
+
             table.insert(rooms, room)
             file.Write("reservablerooms/" .. game.GetMap() .. ".txt", util.TableToJSON(rooms, false))
             local reservableRoom = ents.Create("reservableroom")
             reservableRoom:SetPos(Vector(0, 0, 0))
             reservableRoom:Spawn()
             reservableRoom:SetRID(room[1])
-            reservableRoom:SetCollisionBounds(Vector(room[2], room[3], room[4]), Vector(room[5], room[6], room[7]))
+            reservableRoom:SetCollisionBounds(Vector(x1, y1, z1), Vector(x2, y2, z2))
             checkRoomDoors()
             print("You have created a room.")
         else
@@ -77,6 +103,32 @@ concommand.Add("addreservableroom", function(ply, cmd, args)
                     room = {args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]}
                 else
                     room = {args[1], args[2], args[3], args[4], args[5], args[6], args[7]}
+                end
+
+                --Ensure args conform to AABB mins/maxs
+                local x1, y1, z1, x2, y2, z2 = args[2], args[3], args[4], args[5], args[6], args[7]
+
+                local tmp
+                if x1 > x2 then
+                    tmp = x2
+                    x2 = x1
+                    x1 = tmp
+                    room[2] = x1
+                    room[5] = x2
+                end
+                if y1 > y2 then
+                    tmp = y2
+                    y2 = y1
+                    y1 = tmp
+                    room[3] = y1
+                    room[6] = y2
+                end
+                if z1 > z2 then
+                    tmp = z2
+                    z2 = z1
+                    z1 = tmp
+                    room[4] = z1
+                    room[7] = z2
                 end
 
                 table.insert(rooms, room)
