@@ -18,15 +18,15 @@ Door locking: Doors automatically close and lock upon claiming the room with the
 
 ## Chat commands:
 
-!claim ID ( Claims the requested spot if everything is a-ok )
+`!claim ID` - Claims the requested room ID
 
-!clear ID ( Clears the allowed player list for that spot ( Admin+ only command ))
+`!clear ID` - If admin, unreserves the room ID
 
-!lockdoor ( Locks your door if you have a reserved room )
+`!lockdoor` - Locks your door if you have a reserved room
 
-!unclaim ( Unclaims a spot if you own it ( Does not require ID ))
+`!unclaim` Unclaims a reserved room
 
-!unlockdoor ( Unlocks your door if you have a reserved room )
+`!unlockdoor` Unlocks your door if you have a reserved room
 
 ## F.A.Q.
 
